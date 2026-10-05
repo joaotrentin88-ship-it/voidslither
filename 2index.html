@@ -1,0 +1,1099 @@
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2×2 Dodge</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #000;
+    color: white;
+    font-family: Arial, sans-serif;
+    user-select: none;
+}
+
+/* =====================================================
+   JOGO
+===================================================== */
+
+#game {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+
+    background:
+        radial-gradient(
+            circle at 50% 45%,
+            #252525 0%,
+            #111 45%,
+            #000 100%
+        );
+}
+
+/* =====================================================
+   CÂMERA
+===================================================== */
+
+#camera {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    width: 100%;
+    height: 100%;
+
+    transform:
+        translate(-50%, -50%)
+        translate(
+            calc(var(--camX) * -80px),
+            calc(var(--camY) * -55px)
+        );
+
+    transition: transform 0.04s linear;
+
+    perspective: 700px;
+}
+
+/* =====================================================
+   CHÃO
+===================================================== */
+
+#floor {
+    position: absolute;
+
+    width: 1000px;
+    height: 1000px;
+
+    left: 50%;
+    top: 50%;
+
+    transform:
+        translate(-50%, -50%)
+        rotateX(70deg)
+        translateZ(-250px);
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent 49.7%,
+            rgba(255,255,255,.35) 50%,
+            transparent 50.3%
+        ),
+        linear-gradient(
+            0deg,
+            transparent 49.7%,
+            rgba(255,255,255,.35) 50%,
+            transparent 50.3%
+        );
+
+    background-size: 500px 500px;
+
+    border: 3px solid #777;
+
+    box-shadow:
+        0 0 100px rgba(255,255,255,.08);
+
+    transform-style: preserve-3d;
+}
+
+/* área 2x2 */
+
+#arena {
+    position: absolute;
+
+    width: 500px;
+    height: 500px;
+
+    left: 50%;
+    top: 50%;
+
+    transform:
+        translate(-50%, -50%)
+        rotateX(70deg)
+        translateZ(-260px);
+
+    border: 4px solid white;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent 49.5%,
+            rgba(255,255,255,.7) 50%,
+            transparent 50.5%
+        ),
+        linear-gradient(
+            0deg,
+            transparent 49.5%,
+            rgba(255,255,255,.7) 50%,
+            transparent 50.5%
+        );
+
+    background-size: 100% 100%;
+
+    box-shadow:
+        0 0 30px rgba(255,255,255,.15);
+}
+
+/* =====================================================
+   MARCADOR DA POSIÇÃO DO JOGADOR
+===================================================== */
+
+#playerPosition {
+    position: absolute;
+
+    width: 25px;
+    height: 25px;
+
+    left: 50%;
+    top: 50%;
+
+    border-radius: 50%;
+
+    background: #00ff88;
+
+    box-shadow:
+        0 0 10px #00ff88,
+        0 0 30px rgba(0,255,136,.7);
+
+    transform:
+        translate(
+            calc(var(--px) * 240px),
+            calc(var(--py) * 240px)
+        );
+
+    z-index: 20;
+}
+
+/* =====================================================
+   OBSTÁCULOS
+===================================================== */
+
+#obstacles {
+    position: absolute;
+
+    inset: 0;
+
+    perspective: 700px;
+
+    transform-style: preserve-3d;
+}
+
+.obstacle {
+    position: absolute;
+
+    width: 500px;
+    height: 500px;
+
+    left: 50%;
+    top: 50%;
+
+    transform-style: preserve-3d;
+
+    pointer-events: none;
+}
+
+/* bloco individual */
+
+.block {
+    position: absolute;
+
+    width: 245px;
+    height: 245px;
+
+    border: 4px solid #ff7777;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ff3030,
+            #8b0000
+        );
+
+    box-shadow:
+        inset 0 0 30px rgba(255,255,255,.15),
+        0 0 30px rgba(255,0,0,.3);
+
+    transform-style: preserve-3d;
+}
+
+/* profundidade */
+
+.block::after {
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    background: #500000;
+
+    transform: translateZ(-35px) translate(12px,12px);
+
+    z-index: -1;
+}
+
+.p0 {
+    left: 0;
+    top: 0;
+}
+
+.p1 {
+    left: 255px;
+    top: 0;
+}
+
+.p2 {
+    left: 0;
+    top: 255px;
+}
+
+.p3 {
+    left: 255px;
+    top: 255px;
+}
+
+/* =====================================================
+   HUD
+===================================================== */
+
+#hud {
+    position: absolute;
+
+    top: 20px;
+    left: 20px;
+
+    z-index: 100;
+
+    text-shadow: 0 2px 5px black;
+}
+
+#score {
+    font-size: 32px;
+    font-weight: bold;
+}
+
+#speed {
+    margin-top: 5px;
+    color: #ccc;
+}
+
+#positionText {
+    margin-top: 5px;
+    color: #00ff88;
+}
+
+/* =====================================================
+   MIRA
+===================================================== */
+
+#crosshair {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    width: 22px;
+    height: 22px;
+
+    transform: translate(-50%, -50%);
+
+    z-index: 90;
+
+    pointer-events: none;
+}
+
+#crosshair::before,
+#crosshair::after {
+    content: "";
+
+    position: absolute;
+
+    background: white;
+
+    box-shadow: 0 0 5px white;
+}
+
+#crosshair::before {
+    width: 22px;
+    height: 2px;
+
+    top: 10px;
+    left: 0;
+}
+
+#crosshair::after {
+    width: 2px;
+    height: 22px;
+
+    left: 10px;
+    top: 0;
+}
+
+/* =====================================================
+   CONTROLES
+===================================================== */
+
+#controls {
+    position: absolute;
+
+    bottom: 20px;
+    right: 20px;
+
+    z-index: 100;
+
+    text-align: right;
+
+    color: #aaa;
+
+    font-size: 13px;
+}
+
+/* =====================================================
+   MENU
+===================================================== */
+
+#menu {
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 200;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    background: rgba(0,0,0,.85);
+}
+
+#menu h1 {
+    font-size: 65px;
+
+    margin: 0 0 10px;
+
+    text-shadow:
+        0 0 20px red,
+        0 0 50px red;
+}
+
+#menu p {
+    line-height: 1.6;
+    color: #ccc;
+}
+
+button {
+    margin-top: 20px;
+
+    padding: 15px 45px;
+
+    border: 2px solid white;
+
+    background: transparent;
+
+    color: white;
+
+    font-size: 20px;
+
+    cursor: pointer;
+}
+
+button:hover {
+    background: white;
+    color: black;
+}
+
+#gameOver {
+    display: none;
+}
+
+#finalScore {
+    font-size: 30px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+    <div id="camera">
+
+        <div id="floor"></div>
+
+        <div id="arena"></div>
+
+        <div id="playerPosition"></div>
+
+        <div id="obstacles"></div>
+
+    </div>
+
+    <div id="crosshair"></div>
+
+    <div id="hud">
+
+        <div id="score">0</div>
+
+        <div id="speed">
+            Velocidade: 1.0x
+        </div>
+
+        <div id="positionText">
+            Posição: 0.0 / 0.0
+        </div>
+
+    </div>
+
+    <div id="controls">
+        WASD / SETAS<br>
+        Movimente-se livremente no 2×2
+    </div>
+
+    <div id="menu">
+
+        <div id="startScreen">
+
+            <h1>2×2 DODGE</h1>
+
+            <p>
+                Os blocos estão vindo em sua direção.<br>
+                Cada formação possui apenas <b>1 espaço vazio</b>.<br>
+                Entre nele antes que o obstáculo chegue.
+            </p>
+
+            <button onclick="startGame()">
+                JOGAR
+            </button>
+
+        </div>
+
+        <div id="gameOver">
+
+            <h1>GAME OVER</h1>
+
+            <div id="finalScore">
+                Pontuação: 0
+            </div>
+
+            <button onclick="startGame()">
+                JOGAR NOVAMENTE
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+/* =====================================================
+   ELEMENTOS
+===================================================== */
+
+const camera =
+    document.getElementById("camera");
+
+const obstaclesContainer =
+    document.getElementById("obstacles");
+
+const playerPosition =
+    document.getElementById("playerPosition");
+
+const scoreElement =
+    document.getElementById("score");
+
+const speedElement =
+    document.getElementById("speed");
+
+const positionText =
+    document.getElementById("positionText");
+
+
+/* =====================================================
+   ESTADO
+===================================================== */
+
+let gameRunning = false;
+
+let score = 0;
+
+let speed = 1;
+
+let lastTime = 0;
+
+let spawnTimer = 0;
+
+let obstacles = [];
+
+
+/*
+    Posição do jogador.
+
+    -1 = extremo esquerdo/cima
+     0 = centro
+     1 = extremo direito/baixo
+*/
+
+let player = {
+
+    x: 0,
+    y: 0
+
+};
+
+
+/* =====================================================
+   TECLADO
+===================================================== */
+
+const keys = {};
+
+document.addEventListener("keydown", e => {
+
+    keys[e.key.toLowerCase()] = true;
+
+});
+
+document.addEventListener("keyup", e => {
+
+    keys[e.key.toLowerCase()] = false;
+
+});
+
+
+/* =====================================================
+   INICIAR
+===================================================== */
+
+function startGame() {
+
+    gameRunning = true;
+
+    score = 0;
+
+    speed = 1;
+
+    spawnTimer = 0;
+
+    player.x = 0;
+    player.y = 0;
+
+    obstacles.forEach(o => {
+
+        o.element.remove();
+
+    });
+
+    obstacles = [];
+
+    scoreElement.textContent = "0";
+
+    document.getElementById(
+        "startScreen"
+    ).style.display = "none";
+
+    document.getElementById(
+        "gameOver"
+    ).style.display = "none";
+
+    lastTime = performance.now();
+
+    requestAnimationFrame(gameLoop);
+
+}
+
+
+/* =====================================================
+   MOVIMENTO
+===================================================== */
+
+function updatePlayer(dt) {
+
+    /*
+       Velocidade relativamente lenta
+       para permitir movimentos precisos.
+    */
+
+    const moveSpeed = 0.0015 * dt;
+
+    let dx = 0;
+    let dy = 0;
+
+
+    if (
+        keys["a"] ||
+        keys["arrowleft"]
+    ) {
+
+        dx -= moveSpeed;
+
+    }
+
+    if (
+        keys["d"] ||
+        keys["arrowright"]
+    ) {
+
+        dx += moveSpeed;
+
+    }
+
+    if (
+        keys["w"] ||
+        keys["arrowup"]
+    ) {
+
+        dy -= moveSpeed;
+
+    }
+
+    if (
+        keys["s"] ||
+        keys["arrowdown"]
+    ) {
+
+        dy += moveSpeed;
+
+    }
+
+
+    player.x += dx;
+    player.y += dy;
+
+
+    /*
+       LIMITES DA ARENA
+
+       Deixamos uma pequena margem
+       para não ficar metade fora.
+    */
+
+    player.x =
+        Math.max(
+            -0.88,
+            Math.min(0.88, player.x)
+        );
+
+    player.y =
+        Math.max(
+            -0.88,
+            Math.min(0.88, player.y)
+        );
+
+
+    /*
+       A câmera acompanha o jogador.
+
+       Isso cria a sensação de que
+       você está andando dentro do espaço.
+    */
+
+    camera.style.setProperty(
+        "--camX",
+        player.x
+    );
+
+    camera.style.setProperty(
+        "--camY",
+        player.y
+    );
+
+
+    /*
+       Marcador visual da posição.
+    */
+
+    playerPosition.style.setProperty(
+        "--px",
+        player.x
+    );
+
+    playerPosition.style.setProperty(
+        "--py",
+        player.y
+    );
+
+
+    positionText.textContent =
+        "Posição: " +
+        player.x.toFixed(2) +
+        " / " +
+        player.y.toFixed(2);
+
+}
+
+
+/* =====================================================
+   CRIAR OBSTÁCULO
+===================================================== */
+
+function spawnObstacle() {
+
+    const obstacleElement =
+        document.createElement("div");
+
+    obstacleElement.className =
+        "obstacle";
+
+
+    /*
+       Uma das quatro posições
+       fica vazia.
+    */
+
+    const empty =
+        Math.floor(Math.random() * 4);
+
+
+    for (let i = 0; i < 4; i++) {
+
+        if (i === empty)
+            continue;
+
+        const block =
+            document.createElement("div");
+
+        block.className =
+            "block p" + i;
+
+        obstacleElement.appendChild(block);
+
+    }
+
+
+    obstaclesContainer.appendChild(
+        obstacleElement
+    );
+
+
+    const obstacle = {
+
+        element: obstacleElement,
+
+        /*
+           0 = muito longe
+           1 = câmera
+        */
+
+        distance: 0,
+
+        empty: empty,
+
+        checked: false
+
+    };
+
+
+    obstacles.push(obstacle);
+
+}
+
+
+/* =====================================================
+   DESENHAR OBSTÁCULO
+===================================================== */
+
+function renderObstacle(obstacle) {
+
+    /*
+       Transformamos a distância em
+       uma escala de perspectiva.
+
+       Quanto mais perto:
+       maior fica.
+    */
+
+    const d = obstacle.distance;
+
+    /*
+       Z aumenta até 1.
+    */
+
+    const z =
+        -1200 + d * 1200;
+
+
+    /*
+       Escala pequena longe,
+       grande perto.
+    */
+
+    const scale =
+        0.15 + d * 1.45;
+
+
+    obstacle.element.style.transform =
+
+        `translate(-50%, -50%)
+         translateZ(${z}px)
+         scale(${scale})`;
+
+}
+
+
+/* =====================================================
+   DETERMINAR CÉLULA
+===================================================== */
+
+function getPlayerCell() {
+
+    /*
+       esquerda / direita
+    */
+
+    const column =
+        player.x < 0 ? 0 : 1;
+
+
+    /*
+       cima / baixo
+    */
+
+    const row =
+        player.y < 0 ? 0 : 1;
+
+
+    return row * 2 + column;
+
+}
+
+
+/* =====================================================
+   COLISÃO
+===================================================== */
+
+function checkCollision(obstacle) {
+
+    /*
+       A colisão só começa quando
+       o obstáculo realmente está
+       muito perto.
+
+       Antes era muito alta.
+       Agora esperamos chegar
+       praticamente na câmera.
+    */
+
+    if (
+        obstacle.distance >= 0.90 &&
+        obstacle.distance <= 1.05 &&
+        !obstacle.checked
+    ) {
+
+        obstacle.checked = true;
+
+
+        const playerCell =
+            getPlayerCell();
+
+
+        /*
+           Se o jogador estiver na célula
+           vazia, passou.
+        */
+
+        if (
+            playerCell === obstacle.empty
+        ) {
+
+            score++;
+
+            scoreElement.textContent =
+                score;
+
+
+            /*
+               Aumenta a velocidade
+               progressivamente.
+            */
+
+            speed += 0.07;
+
+        }
+
+        else {
+
+            endGame();
+
+        }
+
+    }
+
+}
+
+
+/* =====================================================
+   GAME LOOP
+===================================================== */
+
+function gameLoop(time) {
+
+    if (!gameRunning)
+        return;
+
+
+    const dt =
+        Math.min(
+            time - lastTime,
+            40
+        );
+
+
+    lastTime = time;
+
+
+    /* jogador */
+
+    updatePlayer(dt);
+
+
+    /* =================================================
+       SPAWN
+    ================================================= */
+
+    spawnTimer += dt;
+
+
+    /*
+       Quanto maior a pontuação,
+       menor o intervalo.
+    */
+
+    const spawnInterval =
+        Math.max(
+            650,
+            1500 - score * 15
+        );
+
+
+    if (
+        spawnTimer >= spawnInterval
+    ) {
+
+        spawnObstacle();
+
+        spawnTimer = 0;
+
+    }
+
+
+    /* =================================================
+       OBSTÁCULOS
+    ================================================= */
+
+    obstacles.forEach(obstacle => {
+
+        /*
+           A distância aumenta.
+        */
+
+        obstacle.distance +=
+            0.00045 *
+            speed *
+            dt;
+
+
+        renderObstacle(obstacle);
+
+        checkCollision(obstacle);
+
+    });
+
+
+    /* =================================================
+       REMOVER
+    ================================================= */
+
+    obstacles =
+        obstacles.filter(obstacle => {
+
+            if (
+                obstacle.distance > 1.2
+            ) {
+
+                obstacle.element.remove();
+
+                return false;
+
+            }
+
+            return true;
+
+        });
+
+
+    speedElement.textContent =
+        "Velocidade: " +
+        speed.toFixed(1) +
+        "x";
+
+
+    requestAnimationFrame(
+        gameLoop
+    );
+
+}
+
+
+/* =====================================================
+   GAME OVER
+===================================================== */
+
+function endGame() {
+
+    gameRunning = false;
+
+
+    document.getElementById(
+        "gameOver"
+    ).style.display = "block";
+
+
+    document.getElementById(
+        "finalScore"
+    ).textContent =
+        "Pontuação: " + score;
+
+}
+
+
+/* =====================================================
+   ENTER
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    e => {
+
+        if (
+            e.key === "Enter" &&
+            !gameRunning
+        ) {
+
+            startGame();
+
+        }
+
+    }
+);
+
+</script>
+
+</body>
+</html>
+```
