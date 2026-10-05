@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
 
@@ -8,23 +9,18 @@
     <title>Void Snake - Jogue Online Grátis</title>
 
     <meta name="description"
-          content="Jogue Void Snake online gratuitamente. Controle sua cobra, colete comida, cresça e sobreviva em uma arena cheia de cobras.">
+        content="Jogue Void Snake online gratuitamente. Controle sua cobra, colete orbs, cresça e enfrente outras cobras em uma arena.">
 
     <meta name="robots" content="index, follow">
 
-    <meta name="author" content="Void Snake">
-
-    <meta property="og:title" content="Void Snake - Jogue Online">
-    <meta property="og:description"
-          content="Controle sua cobra, cresça e sobreviva na arena em Void Snake.">
-    <meta property="og:type" content="website">
-
     <style>
+
         * {
             box-sizing: border-box;
         }
 
-        html, body {
+        html,
+        body {
             margin: 0;
             padding: 0;
             width: 100%;
@@ -38,7 +34,6 @@
             display: block;
             width: 100%;
             height: 100%;
-            cursor: crosshair;
         }
 
         #hud {
@@ -46,11 +41,15 @@
             top: 15px;
             left: 15px;
             z-index: 10;
+
             color: white;
+
             background: rgba(0, 0, 0, 0.55);
+
             padding: 12px 16px;
+
             border-radius: 10px;
-            font-size: 15px;
+
             user-select: none;
         }
 
@@ -59,29 +58,44 @@
             top: 15px;
             right: 15px;
             z-index: 10;
+
             color: white;
+
             background: rgba(0, 0, 0, 0.55);
+
             padding: 12px 16px;
+
             border-radius: 10px;
+
             min-width: 170px;
+
             user-select: none;
         }
 
         #leaderboard h3 {
             margin: 0 0 8px;
-            font-size: 16px;
         }
 
         #gameOver {
+
             display: none;
+
             position: fixed;
+
             inset: 0;
+
             z-index: 20;
+
             background: rgba(0, 0, 0, 0.75);
+
             color: white;
+
             align-items: center;
+
             justify-content: center;
+
             flex-direction: column;
+
             text-align: center;
         }
 
@@ -90,22 +104,25 @@
             margin: 0 0 10px;
         }
 
-        #gameOver p {
-            font-size: 20px;
-        }
-
         button {
+
             border: none;
+
             padding: 12px 25px;
+
             border-radius: 8px;
+
             font-size: 18px;
+
             cursor: pointer;
         }
 
         button:hover {
             transform: scale(1.05);
         }
+
     </style>
+
 </head>
 
 <body>
@@ -113,328 +130,976 @@
 <canvas id="game"></canvas>
 
 <div id="hud">
-    🐍 <b>Void Snake</b><br>
-    Tamanho: <span id="score">10</span><br>
-    Velocidade: <span id="speed">Normal</span><br>
-    🖱️ Mova o mouse para controlar<br>
-    ⚡ Clique ou SPACE para acelerar
+
+    🐍 <b>Void Snake</b>
+
+    <br><br>
+
+    Tamanho:
+    <span id="score">15</span>
+
+    <br>
+
+    Velocidade:
+    <span id="speed">Normal</span>
+
+    <br><br>
+
+    🖱️ Mova o mouse
+
+    <br>
+
+    ⚡ Clique ou SPACE para boost
+
 </div>
+
 
 <div id="leaderboard">
+
     <h3>🏆 Ranking</h3>
+
     <div id="ranking"></div>
+
 </div>
+
 
 <div id="gameOver">
+
     <h1>Game Over</h1>
-    <p>Seu tamanho: <span id="finalScore">0</span></p>
-    <button onclick="restartGame()">Jogar novamente</button>
+
+    <p>
+        Seu tamanho:
+        <span id="finalScore">0</span>
+    </p>
+
+    <button onclick="restartGame()">
+        Jogar novamente
+    </button>
+
 </div>
 
+
 <script>
+
 const canvas = document.getElementById("game");
+
 const ctx = canvas.getContext("2d");
 
-const scoreElement = document.getElementById("score");
-const speedElement = document.getElementById("speed");
-const rankingElement = document.getElementById("ranking");
-const gameOverScreen = document.getElementById("gameOver");
-const finalScoreElement = document.getElementById("finalScore");
+
+const scoreElement =
+    document.getElementById("score");
+
+const speedElement =
+    document.getElementById("speed");
+
+const rankingElement =
+    document.getElementById("ranking");
+
+const gameOverScreen =
+    document.getElementById("gameOver");
+
+const finalScoreElement =
+    document.getElementById("finalScore");
+
 
 function resizeCanvas() {
+
     canvas.width = window.innerWidth;
+
     canvas.height = window.innerHeight;
+
 }
 
-window.addEventListener("resize", resizeCanvas);
+window.addEventListener(
+    "resize",
+    resizeCanvas
+);
+
 resizeCanvas();
+
+
+/* =========================
+        CONFIGURAÇÕES
+========================= */
 
 const WORLD_SIZE = 6000;
 
-let mouseX = canvas.width / 2;
-let mouseY = canvas.height / 2;
+const START_LENGTH = 15;
+
+const MIN_LENGTH = 8;
+
+const NORMAL_SPEED = 2.8;
+
+const BOOST_SPEED = 5.0;
+
+const BOOST_LOSS_INTERVAL = 7;
+
+
+/* =========================
+        CONTROLES
+========================= */
+
+let mouseX =
+    canvas.width / 2;
+
+let mouseY =
+    canvas.height / 2;
 
 let boosting = false;
+
 let gameRunning = true;
 
+
+/* =========================
+        OBJETOS
+========================= */
+
 const foods = [];
+
 const bots = [];
 
+
+/* =========================
+        JOGADOR
+========================= */
+
 const player = {
+
     x: WORLD_SIZE / 2,
+
     y: WORLD_SIZE / 2,
+
     angle: 0,
-    speed: 2.8,
+
+    speed: NORMAL_SPEED,
+
     radius: 13,
+
     body: [],
-    length: 15
+
+    length: START_LENGTH,
+
+    boostCounter: 0
+
 };
 
-for (let i = 0; i < player.length; i++) {
+
+for (
+    let i = 0;
+    i < player.length;
+    i++
+) {
+
     player.body.push({
+
         x: player.x - i * 10,
+
         y: player.y
+
     });
+
 }
+
+
+/* =========================
+        POSIÇÃO RANDOM
+========================= */
 
 function randomPosition() {
+
     return {
-        x: Math.random() * (WORLD_SIZE - 200) + 100,
-        y: Math.random() * (WORLD_SIZE - 200) + 100
+
+        x:
+            Math.random() *
+            (WORLD_SIZE - 300) +
+            150,
+
+        y:
+            Math.random() *
+            (WORLD_SIZE - 300) +
+            150
+
     };
+
 }
 
-function createFood() {
-    const pos = randomPosition();
+
+/* =========================
+        CRIAR ORB
+========================= */
+
+function createOrb(x, y, value = 1) {
 
     foods.push({
-        x: pos.x,
-        y: pos.y,
-        radius: 5 + Math.random() * 4,
-        value: 1
+
+        x: x,
+
+        y: y,
+
+        radius:
+            5 +
+            Math.random() * 3,
+
+        value: value
+
     });
+
 }
 
-for (let i = 0; i < 500; i++) {
-    createFood();
+
+/* =========================
+        COMIDA INICIAL
+========================= */
+
+function createRandomFood() {
+
+    const pos =
+        randomPosition();
+
+    createOrb(
+        pos.x,
+        pos.y
+    );
+
 }
+
+
+for (
+    let i = 0;
+    i < 500;
+    i++
+) {
+
+    createRandomFood();
+
+}
+
+
+/* =========================
+        BOT
+========================= */
 
 class Bot {
 
     constructor() {
 
-        const pos = randomPosition();
+        const pos =
+            randomPosition();
 
         this.x = pos.x;
+
         this.y = pos.y;
 
-        this.angle = Math.random() * Math.PI * 2;
+        this.angle =
+            Math.random() *
+            Math.PI * 2;
 
-        this.speed = 1.7 + Math.random() * 1.2;
+        this.speed =
+            1.7 +
+            Math.random() * 1.2;
 
         this.radius = 12;
 
-        this.length = 10 + Math.floor(Math.random() * 20);
+        this.length =
+            10 +
+            Math.floor(
+                Math.random() * 25
+            );
 
         this.body = [];
 
-        this.color =
-            `hsl(${Math.random() * 360}, 80%, 55%)`;
+        this.alive = true;
 
-        for (let i = 0; i < this.length; i++) {
-            this.body.push({
-                x: this.x - i * 9,
-                y: this.y
-            });
-        }
+        this.color =
+            `hsl(
+                ${Math.random() * 360},
+                80%,
+                55%
+            )`;
 
         this.turnTimer = 0;
+
+
+        for (
+            let i = 0;
+            i < this.length;
+            i++
+        ) {
+
+            this.body.push({
+
+                x:
+                    this.x -
+                    i * 9,
+
+                y:
+                    this.y
+
+            });
+
+        }
+
     }
+
 
     update() {
 
+        if (!this.alive) {
+            return;
+        }
+
+
         this.turnTimer--;
 
-        if (this.turnTimer <= 0) {
+
+        if (
+            this.turnTimer <= 0
+        ) {
 
             this.angle +=
-                (Math.random() - 0.5) * 1.4;
+                (Math.random() - 0.5)
+                * 1.4;
 
             this.turnTimer =
-                30 + Math.random() * 100;
+                30 +
+                Math.random() * 100;
+
         }
 
-        this.x += Math.cos(this.angle) * this.speed;
-        this.y += Math.sin(this.angle) * this.speed;
 
-        if (this.x < 100 || this.x > WORLD_SIZE - 100) {
-            this.angle = Math.PI - this.angle;
+        this.x +=
+            Math.cos(this.angle)
+            * this.speed;
+
+        this.y +=
+            Math.sin(this.angle)
+            * this.speed;
+
+
+        /* BORDAS */
+
+        if (
+            this.x < 100 ||
+            this.x >
+            WORLD_SIZE - 100
+        ) {
+
+            this.angle =
+                Math.PI -
+                this.angle;
+
         }
 
-        if (this.y < 100 || this.y > WORLD_SIZE - 100) {
-            this.angle = -this.angle;
+
+        if (
+            this.y < 100 ||
+            this.y >
+            WORLD_SIZE - 100
+        ) {
+
+            this.angle =
+                -this.angle;
+
         }
+
 
         this.body.unshift({
+
             x: this.x,
+
             y: this.y
+
         });
 
-        while (this.body.length > this.length) {
+
+        while (
+            this.body.length >
+            this.length
+        ) {
+
             this.body.pop();
+
         }
 
+
         this.eatFood();
+
     }
+
 
     eatFood() {
 
-        for (let i = foods.length - 1; i >= 0; i--) {
+        for (
+            let i = foods.length - 1;
+            i >= 0;
+            i--
+        ) {
 
-            const food = foods[i];
+            const food =
+                foods[i];
 
-            const dx = this.x - food.x;
-            const dy = this.y - food.y;
 
-            if (Math.hypot(dx, dy) < this.radius + food.radius) {
+            const distance =
+                Math.hypot(
+                    this.x - food.x,
+                    this.y - food.y
+                );
+
+
+            if (
+                distance <
+                this.radius +
+                food.radius
+            ) {
 
                 foods.splice(i, 1);
 
                 this.length++;
 
-                createFood();
+                createRandomFood();
 
                 break;
+
             }
+
         }
+
     }
+
 
     draw(cameraX, cameraY) {
 
-        ctx.beginPath();
-
-        for (let i = this.body.length - 1; i >= 0; i--) {
-
-            const part = this.body[i];
-
-            const sx =
-                part.x - cameraX + canvas.width / 2;
-
-            const sy =
-                part.y - cameraY + canvas.height / 2;
-
-            if (i === this.body.length - 1) {
-                ctx.moveTo(sx, sy);
-            } else {
-                ctx.lineTo(sx, sy);
-            }
+        if (!this.alive) {
+            return;
         }
 
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = this.radius * 2;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
+
+        ctx.beginPath();
+
+
+        for (
+            let i =
+                this.body.length - 1;
+            i >= 0;
+            i--
+        ) {
+
+            const part =
+                this.body[i];
+
+
+            const sx =
+                part.x -
+                cameraX +
+                canvas.width / 2;
+
+
+            const sy =
+                part.y -
+                cameraY +
+                canvas.height / 2;
+
+
+            if (
+                i ===
+                this.body.length - 1
+            ) {
+
+                ctx.moveTo(
+                    sx,
+                    sy
+                );
+
+            } else {
+
+                ctx.lineTo(
+                    sx,
+                    sy
+                );
+
+            }
+
+        }
+
+
+        ctx.strokeStyle =
+            this.color;
+
+        ctx.lineWidth =
+            this.radius * 2;
+
+        ctx.lineCap =
+            "round";
+
+        ctx.lineJoin =
+            "round";
 
         ctx.stroke();
 
-        const head = this.body[0];
+
+        const head =
+            this.body[0];
+
 
         const sx =
-            head.x - cameraX + canvas.width / 2;
+            head.x -
+            cameraX +
+            canvas.width / 2;
+
 
         const sy =
-            head.y - cameraY + canvas.height / 2;
+            head.y -
+            cameraY +
+            canvas.height / 2;
+
 
         ctx.beginPath();
-        ctx.arc(sx, sy, this.radius, 0, Math.PI * 2);
 
-        ctx.fillStyle = this.color;
+        ctx.arc(
+            sx,
+            sy,
+            this.radius,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fillStyle =
+            this.color;
+
         ctx.fill();
+
     }
+
 }
 
-for (let i = 0; i < 18; i++) {
-    bots.push(new Bot());
+
+/* =========================
+        CRIAR BOTS
+========================= */
+
+for (
+    let i = 0;
+    i < 18;
+    i++
+) {
+
+    bots.push(
+        new Bot()
+    );
+
 }
 
-canvas.addEventListener("mousemove", event => {
 
-    mouseX = event.clientX;
-    mouseY = event.clientY;
+/* =========================
+        MOUSE
+========================= */
 
-});
+canvas.addEventListener(
+    "mousemove",
+    event => {
 
-canvas.addEventListener("mousedown", () => {
-    boosting = true;
-});
+        mouseX =
+            event.clientX;
 
-canvas.addEventListener("mouseup", () => {
-    boosting = false;
-});
+        mouseY =
+            event.clientY;
 
-window.addEventListener("keydown", event => {
+    }
+);
 
-    if (event.code === "Space") {
+
+/* =========================
+        BOOST
+========================= */
+
+canvas.addEventListener(
+    "mousedown",
+    () => {
+
         boosting = true;
-        event.preventDefault();
+
     }
+);
 
-});
 
-window.addEventListener("keyup", event => {
+canvas.addEventListener(
+    "mouseup",
+    () => {
 
-    if (event.code === "Space") {
         boosting = false;
+
+    }
+);
+
+
+window.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.code === "Space"
+        ) {
+
+            boosting = true;
+
+            event.preventDefault();
+
+        }
+
+    }
+);
+
+
+window.addEventListener(
+    "keyup",
+    event => {
+
+        if (
+            event.code === "Space"
+        ) {
+
+            boosting = false;
+
+        }
+
+    }
+);
+
+
+/* =========================
+        SOLTAR MASSA
+========================= */
+
+function dropBoostOrb() {
+
+    if (
+        player.body.length <=
+        MIN_LENGTH
+    ) {
+
+        return;
+
     }
 
-});
+
+    /*
+        Pegamos uma parte
+        perto da cauda.
+    */
+
+    const tailIndex =
+        player.body.length - 1;
+
+
+    const tail =
+        player.body[tailIndex];
+
+
+    createOrb(
+        tail.x,
+        tail.y,
+        1
+    );
+
+
+    player.body.pop();
+
+    player.length--;
+
+}
+
+
+/* =========================
+        ATUALIZAR JOGADOR
+========================= */
 
 function updatePlayer() {
 
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    const centerX =
+        canvas.width / 2;
 
-    const dx = mouseX - centerX;
-    const dy = mouseY - centerY;
+    const centerY =
+        canvas.height / 2;
 
-    if (Math.hypot(dx, dy) > 10) {
-        player.angle = Math.atan2(dy, dx);
+
+    const dx =
+        mouseX - centerX;
+
+    const dy =
+        mouseY - centerY;
+
+
+    if (
+        Math.hypot(dx, dy) > 10
+    ) {
+
+        player.angle =
+            Math.atan2(
+                dy,
+                dx
+            );
+
     }
 
-    let currentSpeed =
-        boosting ? player.speed * 1.8 : player.speed;
 
-    player.x += Math.cos(player.angle) * currentSpeed;
-    player.y += Math.sin(player.angle) * currentSpeed;
+    let currentSpeed;
+
+
+    if (
+        boosting &&
+        player.length >
+        MIN_LENGTH
+    ) {
+
+        currentSpeed =
+            BOOST_SPEED;
+
+        player.boostCounter++;
+
+
+        /*
+            A cada alguns frames
+            perde uma parte.
+        */
+
+        if (
+            player.boostCounter >=
+            BOOST_LOSS_INTERVAL
+        ) {
+
+            dropBoostOrb();
+
+            player.boostCounter = 0;
+
+        }
+
+    } else {
+
+        currentSpeed =
+            NORMAL_SPEED;
+
+        player.boostCounter = 0;
+
+    }
+
+
+    player.x +=
+        Math.cos(player.angle)
+        * currentSpeed;
+
+
+    player.y +=
+        Math.sin(player.angle)
+        * currentSpeed;
+
+
+    /* BORDAS */
 
     player.x =
-        Math.max(50, Math.min(WORLD_SIZE - 50, player.x));
+        Math.max(
+            50,
+            Math.min(
+                WORLD_SIZE - 50,
+                player.x
+            )
+        );
+
 
     player.y =
-        Math.max(50, Math.min(WORLD_SIZE - 50, player.y));
+        Math.max(
+            50,
+            Math.min(
+                WORLD_SIZE - 50,
+                player.y
+            )
+        );
+
 
     player.body.unshift({
+
         x: player.x,
+
         y: player.y
+
     });
 
-    while (player.body.length > player.length) {
+
+    while (
+        player.body.length >
+        player.length
+    ) {
+
         player.body.pop();
+
     }
+
 
     eatFood();
 
-    checkCollisions();
+
+    checkPlayerCollisions();
+
 }
+
+
+/* =========================
+        COMER ORBS
+========================= */
 
 function eatFood() {
 
-    for (let i = foods.length - 1; i >= 0; i--) {
+    for (
+        let i = foods.length - 1;
+        i >= 0;
+        i--
+    ) {
 
-        const food = foods[i];
+        const food =
+            foods[i];
 
-        const dx = player.x - food.x;
-        const dy = player.y - food.y;
 
-        if (Math.hypot(dx, dy) < player.radius + food.radius) {
+        const distance =
+            Math.hypot(
+                player.x - food.x,
+                player.y - food.y
+            );
+
+
+        if (
+            distance <
+            player.radius +
+            food.radius
+        ) {
 
             foods.splice(i, 1);
 
-            player.length++;
 
-            createFood();
+            player.length +=
+                food.value;
+
+
+            createRandomFood();
 
         }
+
     }
+
 }
 
-function checkCollisions() {
 
-    for (const bot of bots) {
+/* =========================
+        MORRER BOT
+========================= */
 
-        for (let i = 5; i < bot.body.length; i++) {
+function killBot(bot) {
 
-            const part = bot.body[i];
+    if (!bot.alive) {
+        return;
+    }
+
+
+    bot.alive = false;
+
+
+    /*
+        Transforma o corpo
+        inteiro em orbs.
+    */
+
+    for (
+        let i = 0;
+        i < bot.body.length;
+        i += 2
+    ) {
+
+        const part =
+            bot.body[i];
+
+
+        createOrb(
+            part.x,
+            part.y,
+            1
+        );
+
+    }
+
+}
+
+
+/* =========================
+        COLISÕES
+========================= */
+
+function checkPlayerCollisions() {
+
+    for (
+        const bot of bots
+    ) {
+
+        if (!bot.alive) {
+            continue;
+        }
+
+
+        /*
+            Se a cabeça do bot
+            bater no nosso corpo,
+            o bot morre.
+        */
+
+        for (
+            let i = 5;
+            i < player.body.length;
+            i++
+        ) {
+
+            const part =
+                player.body[i];
+
+
+            const distance =
+                Math.hypot(
+                    bot.x - part.x,
+                    bot.y - part.y
+                );
+
+
+            if (
+                distance <
+                bot.radius +
+                player.radius
+            ) {
+
+                killBot(bot);
+
+                break;
+
+            }
+
+        }
+
+
+        /*
+            Se nossa cabeça bater
+            no corpo do bot,
+            nós morremos.
+        */
+
+        if (!bot.alive) {
+            continue;
+        }
+
+
+        for (
+            let i = 5;
+            i < bot.body.length;
+            i++
+        ) {
+
+            const part =
+                bot.body[i];
+
 
             const distance =
                 Math.hypot(
@@ -442,103 +1107,282 @@ function checkCollisions() {
                     player.y - part.y
                 );
 
-            if (distance < player.radius * 1.5) {
+
+            if (
+                distance <
+                player.radius +
+                bot.radius
+            ) {
 
                 endGame();
+
                 return;
+
             }
+
         }
+
     }
 
-    for (let i = 8; i < player.body.length; i++) {
-
-        const part = player.body[i];
-
-        const distance =
-            Math.hypot(
-                player.x - part.x,
-                player.y - part.y
-            );
-
-        if (distance < player.radius * 1.3) {
-
-            endGame();
-            return;
-        }
-    }
 }
 
-function drawBackground(cameraX, cameraY) {
 
-    ctx.fillStyle = "#111";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+/* =========================
+        BOTS VS BOTS
+========================= */
 
-    const gridSize = 100;
+function checkBotCollisions() {
 
-    ctx.strokeStyle = "#222";
-    ctx.lineWidth = 1;
+    for (
+        let a = 0;
+        a < bots.length;
+        a++
+    ) {
 
-    const startX =
-        -((cameraX - canvas.width / 2) % gridSize);
+        const botA =
+            bots[a];
 
-    const startY =
-        -((cameraY - canvas.height / 2) % gridSize);
 
-    for (let x = startX; x < canvas.width; x += gridSize) {
-
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-
-    }
-
-    for (let y = startY; y < canvas.height; y += gridSize) {
-
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
-
-    }
-
-    const borderX =
-        WORLD_SIZE / 2 - cameraX + canvas.width / 2;
-
-    const borderY =
-        WORLD_SIZE / 2 - cameraY + canvas.height / 2;
-
-    ctx.strokeStyle = "#555";
-    ctx.lineWidth = 5;
-
-    ctx.strokeRect(
-        borderX - WORLD_SIZE / 2,
-        borderY - WORLD_SIZE / 2,
-        WORLD_SIZE,
-        WORLD_SIZE
-    );
-}
-
-function drawFood(cameraX, cameraY) {
-
-    for (const food of foods) {
-
-        const sx =
-            food.x - cameraX + canvas.width / 2;
-
-        const sy =
-            food.y - cameraY + canvas.height / 2;
-
-        if (
-            sx < -20 ||
-            sx > canvas.width + 20 ||
-            sy < -20 ||
-            sy > canvas.height + 20
-        ) {
+        if (!botA.alive) {
             continue;
         }
 
+
+        for (
+            let b = 0;
+            b < bots.length;
+            b++
+        ) {
+
+            if (a === b) {
+                continue;
+            }
+
+
+            const botB =
+                bots[b];
+
+
+            if (!botB.alive) {
+                continue;
+            }
+
+
+            /*
+                Cabeça A bate no corpo B
+            */
+
+            for (
+                let i = 5;
+                i < botB.body.length;
+                i++
+            ) {
+
+                const part =
+                    botB.body[i];
+
+
+                const distance =
+                    Math.hypot(
+                        botA.x - part.x,
+                        botA.y - part.y
+                    );
+
+
+                if (
+                    distance <
+                    botA.radius +
+                    botB.radius
+                ) {
+
+                    killBot(botA);
+
+                    break;
+
+                }
+
+            }
+
+        }
+
+    }
+
+}
+
+
+/* =========================
+        BACKGROUND
+========================= */
+
+function drawBackground(
+    cameraX,
+    cameraY
+) {
+
+    ctx.fillStyle =
+        "#111";
+
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    const gridSize = 100;
+
+
+    ctx.strokeStyle =
+        "#222";
+
+    ctx.lineWidth = 1;
+
+
+    const startX =
+        -(
+            (
+                cameraX -
+                canvas.width / 2
+            ) %
+            gridSize
+        );
+
+
+    const startY =
+        -(
+            (
+                cameraY -
+                canvas.height / 2
+            ) %
+            gridSize
+        );
+
+
+    for (
+        let x = startX;
+        x < canvas.width;
+        x += gridSize
+    ) {
+
         ctx.beginPath();
+
+        ctx.moveTo(
+            x,
+            0
+        );
+
+        ctx.lineTo(
+            x,
+            canvas.height
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    for (
+        let y = startY;
+        y < canvas.height;
+        y += gridSize
+    ) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            0,
+            y
+        );
+
+        ctx.lineTo(
+            canvas.width,
+            y
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    /*
+        Borda do mapa
+    */
+
+    const borderX =
+        WORLD_SIZE / 2 -
+        cameraX +
+        canvas.width / 2;
+
+
+    const borderY =
+        WORLD_SIZE / 2 -
+        cameraY +
+        canvas.height / 2;
+
+
+    ctx.strokeStyle =
+        "#555";
+
+    ctx.lineWidth = 5;
+
+
+    ctx.strokeRect(
+        borderX -
+        WORLD_SIZE / 2,
+
+        borderY -
+        WORLD_SIZE / 2,
+
+        WORLD_SIZE,
+
+        WORLD_SIZE
+    );
+
+}
+
+
+/* =========================
+        DESENHAR ORBS
+========================= */
+
+function drawFood(
+    cameraX,
+    cameraY
+) {
+
+    for (
+        const food of foods
+    ) {
+
+        const sx =
+            food.x -
+            cameraX +
+            canvas.width / 2;
+
+
+        const sy =
+            food.y -
+            cameraY +
+            canvas.height / 2;
+
+
+        if (
+            sx < -20 ||
+            sx >
+            canvas.width + 20 ||
+            sy < -20 ||
+            sy >
+            canvas.height + 20
+        ) {
+
+            continue;
+
+        }
+
+
+        ctx.beginPath();
+
 
         ctx.arc(
             sx,
@@ -548,50 +1392,116 @@ function drawFood(cameraX, cameraY) {
             Math.PI * 2
         );
 
+
         ctx.fillStyle =
-            `hsl(${Math.random() * 360}, 90%, 60%)`;
+            `hsl(
+                ${(food.x + food.y) % 360},
+                90%,
+                60%
+            )`;
+
 
         ctx.fill();
+
     }
+
 }
 
-function drawPlayer(cameraX, cameraY) {
+
+/* =========================
+        DESENHAR PLAYER
+========================= */
+
+function drawPlayer(
+    cameraX,
+    cameraY
+) {
 
     ctx.beginPath();
 
-    for (let i = player.body.length - 1; i >= 0; i--) {
 
-        const part = player.body[i];
+    for (
+        let i =
+            player.body.length - 1;
+        i >= 0;
+        i--
+    ) {
+
+        const part =
+            player.body[i];
+
 
         const sx =
-            part.x - cameraX + canvas.width / 2;
+            part.x -
+            cameraX +
+            canvas.width / 2;
+
 
         const sy =
-            part.y - cameraY + canvas.height / 2;
+            part.y -
+            cameraY +
+            canvas.height / 2;
 
-        if (i === player.body.length - 1) {
-            ctx.moveTo(sx, sy);
+
+        if (
+            i ===
+            player.body.length - 1
+        ) {
+
+            ctx.moveTo(
+                sx,
+                sy
+            );
+
         } else {
-            ctx.lineTo(sx, sy);
+
+            ctx.lineTo(
+                sx,
+                sy
+            );
+
         }
+
     }
 
-    ctx.strokeStyle = "#00ff88";
-    ctx.lineWidth = player.radius * 2;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
+
+    ctx.strokeStyle =
+        "#00ff88";
+
+    ctx.lineWidth =
+        player.radius * 2;
+
+    ctx.lineCap =
+        "round";
+
+    ctx.lineJoin =
+        "round";
 
     ctx.stroke();
 
-    const head = player.body[0];
+
+    /*
+        CABEÇA
+    */
+
+    const head =
+        player.body[0];
+
 
     const sx =
-        head.x - cameraX + canvas.width / 2;
+        head.x -
+        cameraX +
+        canvas.width / 2;
+
 
     const sy =
-        head.y - cameraY + canvas.height / 2;
+        head.y -
+        cameraY +
+        canvas.height / 2;
+
 
     ctx.beginPath();
+
 
     ctx.arc(
         sx,
@@ -601,67 +1511,145 @@ function drawPlayer(cameraX, cameraY) {
         Math.PI * 2
     );
 
-    ctx.fillStyle = "#00ff88";
+
+    ctx.fillStyle =
+        "#00ff88";
+
     ctx.fill();
 
-    ctx.fillStyle = "black";
+
+    /*
+        OLHOS
+    */
+
+    ctx.fillStyle =
+        "black";
+
 
     const eyeDistance = 5;
 
+
     ctx.beginPath();
 
     ctx.arc(
-        sx + Math.cos(player.angle - 0.5) * eyeDistance,
-        sy + Math.sin(player.angle - 0.5) * eyeDistance,
+        sx +
+        Math.cos(
+            player.angle - 0.5
+        ) *
+        eyeDistance,
+
+        sy +
+        Math.sin(
+            player.angle - 0.5
+        ) *
+        eyeDistance,
+
         2,
+
         0,
+
         Math.PI * 2
     );
 
     ctx.fill();
 
+
     ctx.beginPath();
 
     ctx.arc(
-        sx + Math.cos(player.angle + 0.5) * eyeDistance,
-        sy + Math.sin(player.angle + 0.5) * eyeDistance,
+        sx +
+        Math.cos(
+            player.angle + 0.5
+        ) *
+        eyeDistance,
+
+        sy +
+        Math.sin(
+            player.angle + 0.5
+        ) *
+        eyeDistance,
+
         2,
+
         0,
+
         Math.PI * 2
     );
 
     ctx.fill();
+
 }
+
+
+/* =========================
+        RANKING
+========================= */
 
 function updateRanking() {
 
     const scores = [
+
         {
             name: "Você",
-            score: player.length
+
+            score:
+                player.length
         }
+
     ];
 
-    bots.forEach((bot, index) => {
 
-        scores.push({
-            name: "Bot " + (index + 1),
-            score: bot.length
-        });
+    bots.forEach(
+        (bot, index) => {
 
-    });
+            if (!bot.alive) {
+                return;
+            }
 
-    scores.sort((a, b) => b.score - a.score);
 
-    rankingElement.innerHTML = "";
+            scores.push({
 
-    scores.slice(0, 8).forEach((item, index) => {
+                name:
+                    "Bot " +
+                    (index + 1),
 
-        rankingElement.innerHTML +=
-            `${index + 1}. ${item.name} — ${item.score}<br>`;
+                score:
+                    bot.length
 
-    });
+            });
+
+        }
+    );
+
+
+    scores.sort(
+        (a, b) =>
+            b.score -
+            a.score
+    );
+
+
+    rankingElement.innerHTML =
+        "";
+
+
+    scores
+        .slice(0, 8)
+        .forEach(
+            (item, index) => {
+
+                rankingElement.innerHTML +=
+                    `${index + 1}. ${item.name} — ${item.score}<br>`;
+
+            }
+        );
+
 }
+
+
+/* =========================
+        GAME OVER
+========================= */
 
 function endGame() {
 
@@ -670,8 +1658,15 @@ function endGame() {
     finalScoreElement.textContent =
         player.length;
 
-    gameOverScreen.style.display = "flex";
+    gameOverScreen.style.display =
+        "flex";
+
 }
+
+
+/* =========================
+        RESTART
+========================= */
 
 function restartGame() {
 
@@ -679,40 +1674,91 @@ function restartGame() {
 
 }
 
+
+/* =========================
+        GAME LOOP
+========================= */
+
 function gameLoop() {
 
     if (!gameRunning) {
         return;
     }
 
+
     updatePlayer();
 
-    bots.forEach(bot => bot.update());
 
-    const cameraX = player.x;
-    const cameraY = player.y;
+    bots.forEach(
+        bot =>
+            bot.update()
+    );
 
-    drawBackground(cameraX, cameraY);
 
-    drawFood(cameraX, cameraY);
+    checkBotCollisions();
 
-    bots.forEach(bot => {
-        bot.draw(cameraX, cameraY);
-    });
 
-    drawPlayer(cameraX, cameraY);
+    const cameraX =
+        player.x;
 
-    scoreElement.textContent = player.length;
+    const cameraY =
+        player.y;
+
+
+    drawBackground(
+        cameraX,
+        cameraY
+    );
+
+
+    drawFood(
+        cameraX,
+        cameraY
+    );
+
+
+    bots.forEach(
+        bot => {
+
+            bot.draw(
+                cameraX,
+                cameraY
+            );
+
+        }
+    );
+
+
+    drawPlayer(
+        cameraX,
+        cameraY
+    );
+
+
+    scoreElement.textContent =
+        player.length;
+
 
     speedElement.textContent =
-        boosting ? "BOOST ⚡" : "Normal";
+        boosting &&
+        player.length >
+        MIN_LENGTH
+            ? "BOOST ⚡"
+            : "Normal";
+
 
     updateRanking();
 
-    requestAnimationFrame(gameLoop);
+
+    requestAnimationFrame(
+        gameLoop
+    );
+
 }
 
+
 gameLoop();
+
 </script>
 
 </body>
