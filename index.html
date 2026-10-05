@@ -1,128 +1,105 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Void Snake - Jogue Online Grátis</title>
 
-    <title>Void Snake - Jogue Online Grátis</title>
+<meta name="description" content="Void Snake é um jogo de cobras online. Controle sua cobra, elimine bots, colete orbes e fique cada vez maior.">
+<meta name="robots" content="index, follow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta name="description"
-        content="Jogue Void Snake online gratuitamente. Controle sua cobra, colete orbs, cresça e enfrente outras cobras em uma arena.">
+<meta property="og:title" content="Void Snake">
+<meta property="og:description" content="Controle sua cobra, elimine bots e domine a arena.">
+<meta property="og:type" content="website">
 
-    <meta name="robots" content="index, follow">
+<style>
+* {
+    box-sizing: border-box;
+}
 
-    <style>
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #050509;
+    font-family: Arial, sans-serif;
+    color: white;
+}
 
-        * {
-            box-sizing: border-box;
-        }
+canvas {
+    display: block;
+    background: #08080d;
+}
 
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: #111;
-            font-family: Arial, sans-serif;
-        }
+#hud {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 10;
+    background: rgba(0,0,0,.55);
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 15px;
+}
 
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
+#leaderboard {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    z-index: 10;
+    width: 190px;
+    background: rgba(0,0,0,.6);
+    border-radius: 10px;
+    padding: 12px;
+}
 
-        #hud {
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            z-index: 10;
+#leaderboard h3 {
+    margin: 0 0 8px;
+    text-align: center;
+}
 
-            color: white;
+#leaderboard div {
+    padding: 3px 0;
+    font-size: 14px;
+}
 
-            background: rgba(0, 0, 0, 0.55);
+#gameOver {
+    position: fixed;
+    inset: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 20;
+    background: rgba(0,0,0,.75);
+}
 
-            padding: 12px 16px;
+#gameOver h1 {
+    font-size: 55px;
+    margin: 0 0 10px;
+}
 
-            border-radius: 10px;
+#gameOver p {
+    font-size: 20px;
+}
 
-            user-select: none;
-        }
+#restart {
+    border: none;
+    padding: 13px 25px;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #000;
+    font-size: 18px;
+    cursor: pointer;
+}
 
-        #leaderboard {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            z-index: 10;
-
-            color: white;
-
-            background: rgba(0, 0, 0, 0.55);
-
-            padding: 12px 16px;
-
-            border-radius: 10px;
-
-            min-width: 170px;
-
-            user-select: none;
-        }
-
-        #leaderboard h3 {
-            margin: 0 0 8px;
-        }
-
-        #gameOver {
-
-            display: none;
-
-            position: fixed;
-
-            inset: 0;
-
-            z-index: 20;
-
-            background: rgba(0, 0, 0, 0.75);
-
-            color: white;
-
-            align-items: center;
-
-            justify-content: center;
-
-            flex-direction: column;
-
-            text-align: center;
-        }
-
-        #gameOver h1 {
-            font-size: 50px;
-            margin: 0 0 10px;
-        }
-
-        button {
-
-            border: none;
-
-            padding: 12px 25px;
-
-            border-radius: 8px;
-
-            font-size: 18px;
-
-            cursor: pointer;
-        }
-
-        button:hover {
-            transform: scale(1.05);
-        }
-
-    </style>
-
+#restart:hover {
+    transform: scale(1.05);
+}
+</style>
 </head>
 
 <body>
@@ -130,1634 +107,1096 @@
 <canvas id="game"></canvas>
 
 <div id="hud">
-
-    🐍 <b>Void Snake</b>
-
-    <br><br>
-
-    Tamanho:
-    <span id="score">15</span>
-
-    <br>
-
-    Velocidade:
-    <span id="speed">Normal</span>
-
-    <br><br>
-
-    🖱️ Mova o mouse
-
-    <br>
-
-    ⚡ Clique ou SPACE para boost
-
+    Tamanho: <span id="score">20</span><br>
+    Clique/Space = Boost
 </div>
-
 
 <div id="leaderboard">
-
     <h3>🏆 Ranking</h3>
-
     <div id="ranking"></div>
-
 </div>
-
 
 <div id="gameOver">
-
-    <h1>Game Over</h1>
-
-    <p>
-        Seu tamanho:
-        <span id="finalScore">0</span>
-    </p>
-
-    <button onclick="restartGame()">
-        Jogar novamente
-    </button>
-
+    <h1>💀 Você morreu!</h1>
+    <p id="finalScore"></p>
+    <button id="restart">Jogar novamente</button>
 </div>
 
-
 <script>
-
 const canvas = document.getElementById("game");
-
 const ctx = canvas.getContext("2d");
 
+const scoreText = document.getElementById("score");
+const ranking = document.getElementById("ranking");
+const gameOverScreen = document.getElementById("gameOver");
+const finalScore = document.getElementById("finalScore");
+const restartButton = document.getElementById("restart");
 
-const scoreElement =
-    document.getElementById("score");
+let W = canvas.width = window.innerWidth;
+let H = canvas.height = window.innerHeight;
 
-const speedElement =
-    document.getElementById("speed");
-
-const rankingElement =
-    document.getElementById("ranking");
-
-const gameOverScreen =
-    document.getElementById("gameOver");
-
-const finalScoreElement =
-    document.getElementById("finalScore");
-
-
-function resizeCanvas() {
-
-    canvas.width = window.innerWidth;
-
-    canvas.height = window.innerHeight;
-
-}
-
-window.addEventListener(
-    "resize",
-    resizeCanvas
-);
-
-resizeCanvas();
-
+window.addEventListener("resize", () => {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+});
 
 /* =========================
-        CONFIGURAÇÕES
+   CONFIGURAÇÕES
 ========================= */
 
 const WORLD_SIZE = 6000;
 
-const START_LENGTH = 15;
+const PLAYER_RADIUS = 14;
+const BOT_RADIUS = 14;
 
-const MIN_LENGTH = 8;
+const MIN_LENGTH = 12;
 
-const NORMAL_SPEED = 2.8;
+const NORMAL_SPEED = 3.2;
+const BOOST_SPEED = 6;
 
-const BOOST_SPEED = 5.0;
+const SEGMENT_DISTANCE = 8;
 
-const BOOST_LOSS_INTERVAL = 7;
+const BOOST_COST_TIME = 0.09;
 
-
-/* =========================
-        CONTROLES
-========================= */
-
-let mouseX =
-    canvas.width / 2;
-
-let mouseY =
-    canvas.height / 2;
-
-let boosting = false;
-
-let gameRunning = true;
-
+const FOOD_COUNT = 450;
+const BOT_COUNT = 18;
 
 /* =========================
-        OBJETOS
+   MOUSE
 ========================= */
 
-const foods = [];
+const mouse = {
+    x: W / 2,
+    y: H / 2,
+    down: false
+};
+
+window.addEventListener("mousemove", e => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+});
+
+window.addEventListener("mousedown", () => {
+    mouse.down = true;
+});
+
+window.addEventListener("mouseup", () => {
+    mouse.down = false;
+});
+
+window.addEventListener("touchstart", e => {
+    mouse.down = true;
+
+    if (e.touches.length > 0) {
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+    }
+});
+
+window.addEventListener("touchmove", e => {
+    if (e.touches.length > 0) {
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+    }
+});
+
+window.addEventListener("touchend", () => {
+    mouse.down = false;
+});
+
+let spaceDown = false;
+
+window.addEventListener("keydown", e => {
+    if (e.code === "Space") {
+        spaceDown = true;
+        e.preventDefault();
+    }
+});
+
+window.addEventListener("keyup", e => {
+    if (e.code === "Space") {
+        spaceDown = false;
+    }
+});
+
+/* =========================
+   FUNÇÕES
+========================= */
+
+function random(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+function distance(a, b) {
+    return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function distanceXY(x1, y1, x2, y2) {
+    return Math.hypot(x1 - x2, y1 - y2);
+}
+
+function randomColor() {
+    const colors = [
+        "#ff3b3b",
+        "#3b82ff",
+        "#22c55e",
+        "#facc15",
+        "#a855f7",
+        "#ec4899",
+        "#06b6d4",
+        "#f97316"
+    ];
+
+    return colors[Math.floor(Math.random() * colors.length)];
+}
+
+/* =========================
+   ORBES
+========================= */
+
+const orbs = [];
+
+function createOrb(x, y, value = 1, color = null) {
+    orbs.push({
+        x,
+        y,
+        value,
+        radius: random(4, 8),
+        color: color || randomColor()
+    });
+}
+
+function createInitialOrbs() {
+    for (let i = 0; i < FOOD_COUNT; i++) {
+        createOrb(
+            random(100, WORLD_SIZE - 100),
+            random(100, WORLD_SIZE - 100),
+            1
+        );
+    }
+}
+
+/* =========================
+   PLAYER
+========================= */
+
+let player;
+
+function createPlayer() {
+    const x = WORLD_SIZE / 2;
+    const y = WORLD_SIZE / 2;
+
+    const body = [];
+
+    for (let i = 0; i < 20; i++) {
+        body.push({
+            x: x - i * SEGMENT_DISTANCE,
+            y
+        });
+    }
+
+    return {
+        x,
+        y,
+
+        angle: 0,
+
+        targetLength: 20,
+
+        body,
+
+        color: "#ffffff",
+
+        alive: true,
+
+        boostTimer: 0,
+
+        cameraX: x,
+        cameraY: y
+    };
+}
+
+/* =========================
+   BOTS
+========================= */
 
 const bots = [];
 
+function createBot() {
+    const x = random(300, WORLD_SIZE - 300);
+    const y = random(300, WORLD_SIZE - 300);
 
-/* =========================
-        JOGADOR
-========================= */
+    const length = Math.floor(random(20, 55));
 
-const player = {
+    const body = [];
 
-    x: WORLD_SIZE / 2,
+    const angle = random(0, Math.PI * 2);
 
-    y: WORLD_SIZE / 2,
-
-    angle: 0,
-
-    speed: NORMAL_SPEED,
-
-    radius: 13,
-
-    body: [],
-
-    length: START_LENGTH,
-
-    boostCounter: 0
-
-};
-
-
-for (
-    let i = 0;
-    i < player.length;
-    i++
-) {
-
-    player.body.push({
-
-        x: player.x - i * 10,
-
-        y: player.y
-
-    });
-
-}
-
-
-/* =========================
-        POSIÇÃO RANDOM
-========================= */
-
-function randomPosition() {
+    for (let i = 0; i < length; i++) {
+        body.push({
+            x: x - Math.cos(angle) * i * SEGMENT_DISTANCE,
+            y: y - Math.sin(angle) * i * SEGMENT_DISTANCE
+        });
+    }
 
     return {
+        x,
+        y,
 
-        x:
-            Math.random() *
-            (WORLD_SIZE - 300) +
-            150,
+        angle,
 
-        y:
-            Math.random() *
-            (WORLD_SIZE - 300) +
-            150
+        targetLength: length,
 
+        body,
+
+        color: randomColor(),
+
+        alive: true,
+
+        turnTimer: random(30, 150),
+
+        boostTimer: 0
     };
-
 }
 
-
-/* =========================
-        CRIAR ORB
-========================= */
-
-function createOrb(x, y, value = 1) {
-
-    foods.push({
-
-        x: x,
-
-        y: y,
-
-        radius:
-            5 +
-            Math.random() * 3,
-
-        value: value
-
-    });
-
+function createBots() {
+    for (let i = 0; i < BOT_COUNT; i++) {
+        bots.push(createBot());
+    }
 }
 
-
 /* =========================
-        COMIDA INICIAL
-========================= */
-
-function createRandomFood() {
-
-    const pos =
-        randomPosition();
-
-    createOrb(
-        pos.x,
-        pos.y
-    );
-
-}
-
-
-for (
-    let i = 0;
-    i < 500;
-    i++
-) {
-
-    createRandomFood();
-
-}
-
-
-/* =========================
-        BOT
-========================= */
-
-class Bot {
-
-    constructor() {
-
-        const pos =
-            randomPosition();
-
-        this.x = pos.x;
-
-        this.y = pos.y;
-
-        this.angle =
-            Math.random() *
-            Math.PI * 2;
-
-        this.speed =
-            1.7 +
-            Math.random() * 1.2;
-
-        this.radius = 12;
-
-        this.length =
-            10 +
-            Math.floor(
-                Math.random() * 25
-            );
-
-        this.body = [];
-
-        this.alive = true;
-
-        this.color =
-            `hsl(
-                ${Math.random() * 360},
-                80%,
-                55%
-            )`;
-
-        this.turnTimer = 0;
-
-
-        for (
-            let i = 0;
-            i < this.length;
-            i++
-        ) {
-
-            this.body.push({
-
-                x:
-                    this.x -
-                    i * 9,
-
-                y:
-                    this.y
-
-            });
-
-        }
-
-    }
-
-
-    update() {
-
-        if (!this.alive) {
-            return;
-        }
-
-
-        this.turnTimer--;
-
-
-        if (
-            this.turnTimer <= 0
-        ) {
-
-            this.angle +=
-                (Math.random() - 0.5)
-                * 1.4;
-
-            this.turnTimer =
-                30 +
-                Math.random() * 100;
-
-        }
-
-
-        this.x +=
-            Math.cos(this.angle)
-            * this.speed;
-
-        this.y +=
-            Math.sin(this.angle)
-            * this.speed;
-
-
-        /* BORDAS */
-
-        if (
-            this.x < 100 ||
-            this.x >
-            WORLD_SIZE - 100
-        ) {
-
-            this.angle =
-                Math.PI -
-                this.angle;
-
-        }
-
-
-        if (
-            this.y < 100 ||
-            this.y >
-            WORLD_SIZE - 100
-        ) {
-
-            this.angle =
-                -this.angle;
-
-        }
-
-
-        this.body.unshift({
-
-            x: this.x,
-
-            y: this.y
-
-        });
-
-
-        while (
-            this.body.length >
-            this.length
-        ) {
-
-            this.body.pop();
-
-        }
-
-
-        this.eatFood();
-
-    }
-
-
-    eatFood() {
-
-        for (
-            let i = foods.length - 1;
-            i >= 0;
-            i--
-        ) {
-
-            const food =
-                foods[i];
-
-
-            const distance =
-                Math.hypot(
-                    this.x - food.x,
-                    this.y - food.y
-                );
-
-
-            if (
-                distance <
-                this.radius +
-                food.radius
-            ) {
-
-                foods.splice(i, 1);
-
-                this.length++;
-
-                createRandomFood();
-
-                break;
-
-            }
-
-        }
-
-    }
-
-
-    draw(cameraX, cameraY) {
-
-        if (!this.alive) {
-            return;
-        }
-
-
-        ctx.beginPath();
-
-
-        for (
-            let i =
-                this.body.length - 1;
-            i >= 0;
-            i--
-        ) {
-
-            const part =
-                this.body[i];
-
-
-            const sx =
-                part.x -
-                cameraX +
-                canvas.width / 2;
-
-
-            const sy =
-                part.y -
-                cameraY +
-                canvas.height / 2;
-
-
-            if (
-                i ===
-                this.body.length - 1
-            ) {
-
-                ctx.moveTo(
-                    sx,
-                    sy
-                );
-
-            } else {
-
-                ctx.lineTo(
-                    sx,
-                    sy
-                );
-
-            }
-
-        }
-
-
-        ctx.strokeStyle =
-            this.color;
-
-        ctx.lineWidth =
-            this.radius * 2;
-
-        ctx.lineCap =
-            "round";
-
-        ctx.lineJoin =
-            "round";
-
-        ctx.stroke();
-
-
-        const head =
-            this.body[0];
-
-
-        const sx =
-            head.x -
-            cameraX +
-            canvas.width / 2;
-
-
-        const sy =
-            head.y -
-            cameraY +
-            canvas.height / 2;
-
-
-        ctx.beginPath();
-
-        ctx.arc(
-            sx,
-            sy,
-            this.radius,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.fillStyle =
-            this.color;
-
-        ctx.fill();
-
-    }
-
-}
-
-
-/* =========================
-        CRIAR BOTS
-========================= */
-
-for (
-    let i = 0;
-    i < 18;
-    i++
-) {
-
-    bots.push(
-        new Bot()
-    );
-
-}
-
-
-/* =========================
-        MOUSE
-========================= */
-
-canvas.addEventListener(
-    "mousemove",
-    event => {
-
-        mouseX =
-            event.clientX;
-
-        mouseY =
-            event.clientY;
-
-    }
-);
-
-
-/* =========================
-        BOOST
-========================= */
-
-canvas.addEventListener(
-    "mousedown",
-    () => {
-
-        boosting = true;
-
-    }
-);
-
-
-canvas.addEventListener(
-    "mouseup",
-    () => {
-
-        boosting = false;
-
-    }
-);
-
-
-window.addEventListener(
-    "keydown",
-    event => {
-
-        if (
-            event.code === "Space"
-        ) {
-
-            boosting = true;
-
-            event.preventDefault();
-
-        }
-
-    }
-);
-
-
-window.addEventListener(
-    "keyup",
-    event => {
-
-        if (
-            event.code === "Space"
-        ) {
-
-            boosting = false;
-
-        }
-
-    }
-);
-
-
-/* =========================
-        SOLTAR MASSA
-========================= */
-
-function dropBoostOrb() {
-
-    if (
-        player.body.length <=
-        MIN_LENGTH
-    ) {
-
-        return;
-
-    }
-
-
-    /*
-        Pegamos uma parte
-        perto da cauda.
-    */
-
-    const tailIndex =
-        player.body.length - 1;
-
-
-    const tail =
-        player.body[tailIndex];
-
-
-    createOrb(
-        tail.x,
-        tail.y,
-        1
-    );
-
-
-    player.body.pop();
-
-    player.length--;
-
-}
-
-
-/* =========================
-        ATUALIZAR JOGADOR
-========================= */
-
-function updatePlayer() {
-
-    const centerX =
-        canvas.width / 2;
-
-    const centerY =
-        canvas.height / 2;
-
-
-    const dx =
-        mouseX - centerX;
-
-    const dy =
-        mouseY - centerY;
-
-
-    if (
-        Math.hypot(dx, dy) > 10
-    ) {
-
-        player.angle =
-            Math.atan2(
-                dy,
-                dx
-            );
-
-    }
-
-
-    let currentSpeed;
-
-
-    if (
-        boosting &&
-        player.length >
-        MIN_LENGTH
-    ) {
-
-        currentSpeed =
-            BOOST_SPEED;
-
-        player.boostCounter++;
-
-
-        /*
-            A cada alguns frames
-            perde uma parte.
-        */
-
-        if (
-            player.boostCounter >=
-            BOOST_LOSS_INTERVAL
-        ) {
-
-            dropBoostOrb();
-
-            player.boostCounter = 0;
-
-        }
-
-    } else {
-
-        currentSpeed =
-            NORMAL_SPEED;
-
-        player.boostCounter = 0;
-
-    }
-
-
-    player.x +=
-        Math.cos(player.angle)
-        * currentSpeed;
-
-
-    player.y +=
-        Math.sin(player.angle)
-        * currentSpeed;
-
-
-    /* BORDAS */
-
-    player.x =
-        Math.max(
-            50,
-            Math.min(
-                WORLD_SIZE - 50,
-                player.x
-            )
-        );
-
-
-    player.y =
-        Math.max(
-            50,
-            Math.min(
-                WORLD_SIZE - 50,
-                player.y
-            )
-        );
-
-
-    player.body.unshift({
-
-        x: player.x,
-
-        y: player.y
-
-    });
-
-
-    while (
-        player.body.length >
-        player.length
-    ) {
-
-        player.body.pop();
-
-    }
-
-
-    eatFood();
-
-
-    checkPlayerCollisions();
-
-}
-
-
-/* =========================
-        COMER ORBS
-========================= */
-
-function eatFood() {
-
-    for (
-        let i = foods.length - 1;
-        i >= 0;
-        i--
-    ) {
-
-        const food =
-            foods[i];
-
-
-        const distance =
-            Math.hypot(
-                player.x - food.x,
-                player.y - food.y
-            );
-
-
-        if (
-            distance <
-            player.radius +
-            food.radius
-        ) {
-
-            foods.splice(i, 1);
-
-
-            player.length +=
-                food.value;
-
-
-            createRandomFood();
-
-        }
-
-    }
-
-}
-
-
-/* =========================
-        MORRER BOT
+   MORTE DO BOT
 ========================= */
 
 function killBot(bot) {
 
-    if (!bot.alive) {
-        return;
-    }
-
+    if (!bot.alive) return;
 
     bot.alive = false;
 
-
     /*
-        Transforma o corpo
-        inteiro em orbs.
+       Cada parte do corpo vira um orb.
     */
 
-    for (
-        let i = 0;
-        i < bot.body.length;
-        i += 2
-    ) {
+    for (let i = 0; i < bot.body.length; i += 2) {
 
-        const part =
-            bot.body[i];
-
+        const segment = bot.body[i];
 
         createOrb(
-            part.x,
-            part.y,
-            1
+            segment.x + random(-8, 8),
+            segment.y + random(-8, 8),
+            2,
+            bot.color
         );
-
     }
 
+    bot.body.length = 0;
 }
 
-
 /* =========================
-        COLISÕES
+   BOOST DO PLAYER
 ========================= */
 
-function checkPlayerCollisions() {
+function usePlayerBoost() {
 
-    for (
-        const bot of bots
-    ) {
+    if (player.targetLength <= MIN_LENGTH) {
+        return;
+    }
 
-        if (!bot.alive) {
+    /*
+       Remove tamanho da cobra.
+    */
+
+    player.targetLength--;
+
+    /*
+       Pega a cauda atual.
+    */
+
+    const tail = player.body[player.body.length - 1];
+
+    if (tail) {
+
+        createOrb(
+            tail.x + random(-3, 3),
+            tail.y + random(-3, 3),
+            1,
+            player.color
+        );
+    }
+
+    /*
+       Remove imediatamente uma parte do corpo.
+    */
+
+    if (player.body.length > MIN_LENGTH) {
+        player.body.pop();
+    }
+}
+
+/* =========================
+   ATUALIZAR PLAYER
+========================= */
+
+function updatePlayer(delta) {
+
+    if (!player.alive) return;
+
+    const dx = mouse.x - W / 2;
+    const dy = mouse.y - H / 2;
+
+    /*
+       Se o mouse estiver muito perto,
+       não gira.
+    */
+
+    if (Math.hypot(dx, dy) > 5) {
+        player.angle = Math.atan2(dy, dx);
+    }
+
+    const boosting = mouse.down || spaceDown;
+
+    const speed = boosting
+        ? BOOST_SPEED
+        : NORMAL_SPEED;
+
+    player.x += Math.cos(player.angle) * speed * delta * 60;
+    player.y += Math.sin(player.angle) * speed * delta * 60;
+
+    /*
+       Limites do mapa
+    */
+
+    player.x = Math.max(30, Math.min(WORLD_SIZE - 30, player.x));
+    player.y = Math.max(30, Math.min(WORLD_SIZE - 30, player.y));
+
+    /*
+       Coloca nova cabeça.
+    */
+
+    const head = player.body[0];
+
+    if (!head) return;
+
+    const newHead = {
+        x: player.x,
+        y: player.y
+    };
+
+    /*
+       Só adiciona novo segmento quando
+       a cabeça estiver suficientemente longe.
+    */
+
+    if (distance(newHead, head) >= SEGMENT_DISTANCE) {
+
+        player.body.unshift(newHead);
+    } else {
+
+        head.x = player.x;
+        head.y = player.y;
+    }
+
+    /*
+       Mantém o tamanho correto.
+    */
+
+    while (player.body.length > player.targetLength) {
+        player.body.pop();
+    }
+
+    /*
+       Boost consome tamanho continuamente.
+    */
+
+    if (boosting) {
+
+        player.boostTimer += delta;
+
+        if (player.boostTimer >= BOOST_COST_TIME) {
+
+            player.boostTimer = 0;
+
+            usePlayerBoost();
+        }
+
+    } else {
+
+        player.boostTimer = 0;
+    }
+
+    /*
+       Câmara segue o player.
+    */
+
+    player.cameraX += (player.x - player.cameraX) * 0.12;
+    player.cameraY += (player.y - player.cameraY) * 0.12;
+}
+
+/* =========================
+   ATUALIZAR BOT
+========================= */
+
+function updateBot(bot, delta) {
+
+    if (!bot.alive) return;
+
+    bot.turnTimer -= delta;
+
+    /*
+       De vez em quando escolhe
+       uma direção nova.
+    */
+
+    if (bot.turnTimer <= 0) {
+
+        bot.turnTimer = random(1, 4);
+
+        bot.angle += random(-1.2, 1.2);
+    }
+
+    /*
+       Às vezes o bot tenta perseguir o player.
+    */
+
+    const distToPlayer = distance(bot, player);
+
+    if (distToPlayer < 900) {
+
+        const targetAngle = Math.atan2(
+            player.y - bot.y,
+            player.x - bot.x
+        );
+
+        let diff = targetAngle - bot.angle;
+
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+
+        bot.angle += diff * 0.015;
+    }
+
+    /*
+       Evita sair do mapa.
+    */
+
+    if (bot.x < 200) {
+        bot.angle = 0;
+    }
+
+    if (bot.x > WORLD_SIZE - 200) {
+        bot.angle = Math.PI;
+    }
+
+    if (bot.y < 200) {
+        bot.angle = Math.PI / 2;
+    }
+
+    if (bot.y > WORLD_SIZE - 200) {
+        bot.angle = -Math.PI / 2;
+    }
+
+    const speed = 2;
+
+    bot.x += Math.cos(bot.angle) * speed * delta * 60;
+    bot.y += Math.sin(bot.angle) * speed * delta * 60;
+
+    bot.x = Math.max(30, Math.min(WORLD_SIZE - 30, bot.x));
+    bot.y = Math.max(30, Math.min(WORLD_SIZE - 30, bot.y));
+
+    /*
+       Atualiza corpo.
+    */
+
+    const head = bot.body[0];
+
+    if (!head) return;
+
+    const newHead = {
+        x: bot.x,
+        y: bot.y
+    };
+
+    if (distance(newHead, head) >= SEGMENT_DISTANCE) {
+
+        bot.body.unshift(newHead);
+
+    } else {
+
+        head.x = bot.x;
+        head.y = bot.y;
+    }
+
+    while (bot.body.length > bot.targetLength) {
+        bot.body.pop();
+    }
+}
+
+/* =========================
+   COLISÃO COM CORPO
+========================= */
+
+function headHitsBody(head, body, startIndex = 3) {
+
+    if (!head || !body) return false;
+
+    for (let i = startIndex; i < body.length; i++) {
+
+        const segment = body[i];
+
+        const d = distanceXY(
+            head.x,
+            head.y,
+            segment.x,
+            segment.y
+        );
+
+        if (d < PLAYER_RADIUS * 1.45) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/* =========================
+   COLISÕES
+========================= */
+
+function checkCollisions() {
+
+    if (!player.alive) return;
+
+    const playerHead = player.body[0];
+
+    if (!playerHead) return;
+
+    /*
+       PLAYER CONTRA BOTS
+    */
+
+    for (const bot of bots) {
+
+        if (!bot.alive) continue;
+
+        const botHead = bot.body[0];
+
+        if (!botHead) continue;
+
+        /*
+           Seu corpo mata a cabeça do bot.
+        */
+
+        if (headHitsBody(botHead, player.body, 4)) {
+
+            killBot(bot);
+
+            player.targetLength += 4;
+
             continue;
         }
 
-
         /*
-            Se a cabeça do bot
-            bater no nosso corpo,
-            o bot morre.
+           Sua cabeça bate no corpo do bot.
         */
 
-        for (
-            let i = 5;
-            i < player.body.length;
-            i++
-        ) {
+        if (headHitsBody(playerHead, bot.body, 4)) {
 
-            const part =
-                player.body[i];
+            killPlayer();
 
+            return;
+        }
 
-            const distance =
-                Math.hypot(
-                    bot.x - part.x,
-                    bot.y - part.y
-                );
+        /*
+           Cabeça contra cabeça.
+           A maior cobra vence.
+        */
 
+        const headDistance = distance(
+            playerHead,
+            botHead
+        );
 
-            if (
-                distance <
-                bot.radius +
-                player.radius
-            ) {
+        if (headDistance < 22) {
+
+            if (player.targetLength >= bot.targetLength) {
 
                 killBot(bot);
 
-                break;
+                player.targetLength += 3;
 
-            }
+            } else {
 
-        }
-
-
-        /*
-            Se nossa cabeça bater
-            no corpo do bot,
-            nós morremos.
-        */
-
-        if (!bot.alive) {
-            continue;
-        }
-
-
-        for (
-            let i = 5;
-            i < bot.body.length;
-            i++
-        ) {
-
-            const part =
-                bot.body[i];
-
-
-            const distance =
-                Math.hypot(
-                    player.x - part.x,
-                    player.y - part.y
-                );
-
-
-            if (
-                distance <
-                player.radius +
-                bot.radius
-            ) {
-
-                endGame();
+                killPlayer();
 
                 return;
-
             }
-
         }
-
     }
-
 }
 
-
 /* =========================
-        BOTS VS BOTS
+   PLAYER PEGA ORB
 ========================= */
 
-function checkBotCollisions() {
+function collectOrbs() {
 
-    for (
-        let a = 0;
-        a < bots.length;
-        a++
-    ) {
+    if (!player.alive) return;
 
-        const botA =
-            bots[a];
+    const head = player.body[0];
 
+    if (!head) return;
 
-        if (!botA.alive) {
-            continue;
-        }
+    for (let i = orbs.length - 1; i >= 0; i--) {
 
+        const orb = orbs[i];
 
-        for (
-            let b = 0;
-            b < bots.length;
-            b++
+        if (
+            distanceXY(
+                head.x,
+                head.y,
+                orb.x,
+                orb.y
+            ) < PLAYER_RADIUS + orb.radius
         ) {
 
-            if (a === b) {
-                continue;
-            }
+            player.targetLength += orb.value;
 
-
-            const botB =
-                bots[b];
-
-
-            if (!botB.alive) {
-                continue;
-            }
-
-
-            /*
-                Cabeça A bate no corpo B
-            */
-
-            for (
-                let i = 5;
-                i < botB.body.length;
-                i++
-            ) {
-
-                const part =
-                    botB.body[i];
-
-
-                const distance =
-                    Math.hypot(
-                        botA.x - part.x,
-                        botA.y - part.y
-                    );
-
-
-                if (
-                    distance <
-                    botA.radius +
-                    botB.radius
-                ) {
-
-                    killBot(botA);
-
-                    break;
-
-                }
-
-            }
-
+            orbs.splice(i, 1);
         }
-
     }
-
 }
 
-
 /* =========================
-        BACKGROUND
+   MORTE DO PLAYER
 ========================= */
 
-function drawBackground(
-    cameraX,
-    cameraY
-) {
+function killPlayer() {
 
-    ctx.fillStyle =
-        "#111";
+    if (!player.alive) return;
 
-    ctx.fillRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
+    player.alive = false;
+
+    /*
+       O corpo do player também vira orbs.
+    */
+
+    for (let i = 0; i < player.body.length; i += 2) {
+
+        const segment = player.body[i];
+
+        createOrb(
+            segment.x,
+            segment.y,
+            2,
+            "#ffffff"
+        );
+    }
+
+    finalScore.textContent =
+        "Você chegou a " +
+        Math.floor(player.targetLength) +
+        " de tamanho.";
+
+    gameOverScreen.style.display = "flex";
+}
+
+/* =========================
+   RANKING
+========================= */
+
+function updateLeaderboard() {
+
+    const players = [];
+
+    players.push({
+        name: "Você",
+        length: player.targetLength,
+        player: true
+    });
+
+    for (let i = 0; i < bots.length; i++) {
+
+        const bot = bots[i];
+
+        if (!bot.alive) continue;
+
+        players.push({
+            name: "Bot " + (i + 1),
+            length: bot.targetLength,
+            player: false
+        });
+    }
+
+    players.sort((a, b) => b.length - a.length);
+
+    ranking.innerHTML = "";
+
+    players.slice(0, 8).forEach((p, index) => {
+
+        const div = document.createElement("div");
+
+        div.textContent =
+            (index + 1) +
+            ". " +
+            p.name +
+            " — " +
+            Math.floor(p.length);
+
+        if (p.player) {
+            div.style.fontWeight = "bold";
+        }
+
+        ranking.appendChild(div);
+    });
+}
+
+/* =========================
+   DESENHO
+========================= */
+
+function drawWorld() {
+
+    /*
+       Fundo
+    */
+
+    ctx.fillStyle = "#08080d";
+    ctx.fillRect(0, 0, W, H);
+
+    /*
+       Câmara
+    */
+
+    const cameraX = player.cameraX;
+    const cameraY = player.cameraY;
+
+    ctx.save();
+
+    ctx.translate(
+        W / 2 - cameraX,
+        H / 2 - cameraY
     );
 
+    /*
+       Grade
+    */
 
     const gridSize = 100;
 
-
-    ctx.strokeStyle =
-        "#222";
-
+    ctx.strokeStyle = "rgba(255,255,255,.035)";
     ctx.lineWidth = 1;
 
-
     const startX =
-        -(
-            (
-                cameraX -
-                canvas.width / 2
-            ) %
-            gridSize
-        );
+        Math.floor((cameraX - W / 2) / gridSize) * gridSize;
 
+    const endX =
+        cameraX + W / 2 + gridSize;
+
+    for (let x = startX; x <= endX; x += gridSize) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(x, cameraY - H / 2);
+        ctx.lineTo(x, cameraY + H / 2);
+
+        ctx.stroke();
+    }
 
     const startY =
-        -(
-            (
-                cameraY -
-                canvas.height / 2
-            ) %
-            gridSize
-        );
+        Math.floor((cameraY - H / 2) / gridSize) * gridSize;
 
+    const endY =
+        cameraY + H / 2 + gridSize;
 
-    for (
-        let x = startX;
-        x < canvas.width;
-        x += gridSize
-    ) {
+    for (let y = startY; y <= endY; y += gridSize) {
 
         ctx.beginPath();
 
-        ctx.moveTo(
-            x,
-            0
-        );
-
-        ctx.lineTo(
-            x,
-            canvas.height
-        );
+        ctx.moveTo(cameraX - W / 2, y);
+        ctx.lineTo(cameraX + W / 2, y);
 
         ctx.stroke();
-
     }
-
-
-    for (
-        let y = startY;
-        y < canvas.height;
-        y += gridSize
-    ) {
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            0,
-            y
-        );
-
-        ctx.lineTo(
-            canvas.width,
-            y
-        );
-
-        ctx.stroke();
-
-    }
-
 
     /*
-        Borda do mapa
+       Borda do mapa
     */
 
-    const borderX =
-        WORLD_SIZE / 2 -
-        cameraX +
-        canvas.width / 2;
-
-
-    const borderY =
-        WORLD_SIZE / 2 -
-        cameraY +
-        canvas.height / 2;
-
-
-    ctx.strokeStyle =
-        "#555";
-
+    ctx.strokeStyle = "#444";
     ctx.lineWidth = 5;
 
-
     ctx.strokeRect(
-        borderX -
-        WORLD_SIZE / 2,
-
-        borderY -
-        WORLD_SIZE / 2,
-
+        0,
+        0,
         WORLD_SIZE,
-
         WORLD_SIZE
     );
 
-}
+    /*
+       Orbs
+    */
 
-
-/* =========================
-        DESENHAR ORBS
-========================= */
-
-function drawFood(
-    cameraX,
-    cameraY
-) {
-
-    for (
-        const food of foods
-    ) {
-
-        const sx =
-            food.x -
-            cameraX +
-            canvas.width / 2;
-
-
-        const sy =
-            food.y -
-            cameraY +
-            canvas.height / 2;
-
-
-        if (
-            sx < -20 ||
-            sx >
-            canvas.width + 20 ||
-            sy < -20 ||
-            sy >
-            canvas.height + 20
-        ) {
-
-            continue;
-
-        }
-
+    for (const orb of orbs) {
 
         ctx.beginPath();
 
-
         ctx.arc(
-            sx,
-            sy,
-            food.radius,
+            orb.x,
+            orb.y,
+            orb.radius,
             0,
             Math.PI * 2
         );
 
+        ctx.fillStyle = orb.color;
+        ctx.fill();
 
-        ctx.fillStyle =
-            `hsl(
-                ${(food.x + food.y) % 360},
-                90%,
-                60%
-            )`;
-
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = orb.color;
 
         ctx.fill();
 
+        ctx.shadowBlur = 0;
     }
 
+    /*
+       Bots
+    */
+
+    for (const bot of bots) {
+
+        if (!bot.alive) continue;
+
+        drawSnake(bot.body, bot.color);
+    }
+
+    /*
+       Player
+    */
+
+    if (player.alive) {
+
+        drawSnake(
+            player.body,
+            player.color,
+            true
+        );
+    }
+
+    ctx.restore();
 }
 
-
 /* =========================
-        DESENHAR PLAYER
+   DESENHAR COBRA
 ========================= */
 
-function drawPlayer(
-    cameraX,
-    cameraY
-) {
+function drawSnake(body, color, isPlayer = false) {
+
+    if (!body || body.length === 0) return;
+
+    /*
+       Corpo
+    */
+
+    for (let i = body.length - 1; i >= 0; i--) {
+
+        const segment = body[i];
+
+        const progress = i / Math.max(body.length, 1);
+
+        const radius =
+            isPlayer
+                ? 14
+                : 13;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            segment.x,
+            segment.y,
+            radius,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fillStyle = color;
+        ctx.fill();
+    }
+
+    /*
+       Cabeça
+    */
+
+    const head = body[0];
+
+    if (!head) return;
 
     ctx.beginPath();
 
+    ctx.arc(
+        head.x,
+        head.y,
+        isPlayer ? 17 : 16,
+        0,
+        Math.PI * 2
+    );
 
-    for (
-        let i =
-            player.body.length - 1;
-        i >= 0;
-        i--
-    ) {
+    ctx.fillStyle = color;
+    ctx.fill();
 
-        const part =
-            player.body[i];
+    /*
+       Olhos
+    */
 
+    const angle = isPlayer
+        ? player.angle
+        : 0;
 
-        const sx =
-            part.x -
-            cameraX +
-            canvas.width / 2;
+    let eyeAngle;
 
+    if (isPlayer) {
+        eyeAngle = player.angle;
+    } else {
 
-        const sy =
-            part.y -
-            cameraY +
-            canvas.height / 2;
+        /*
+           Descobre direção usando
+           o segundo segmento.
+        */
 
+        if (body.length > 1) {
 
-        if (
-            i ===
-            player.body.length - 1
-        ) {
-
-            ctx.moveTo(
-                sx,
-                sy
+            eyeAngle = Math.atan2(
+                head.y - body[1].y,
+                head.x - body[1].x
             );
 
         } else {
 
-            ctx.lineTo(
-                sx,
-                sy
-            );
-
+            eyeAngle = 0;
         }
-
     }
 
+    const eyeDistance = 7;
 
-    ctx.strokeStyle =
-        "#00ff88";
+    const eye1X =
+        head.x +
+        Math.cos(eyeAngle - 0.45) *
+        eyeDistance;
 
-    ctx.lineWidth =
-        player.radius * 2;
+    const eye1Y =
+        head.y +
+        Math.sin(eyeAngle - 0.45) *
+        eyeDistance;
 
-    ctx.lineCap =
-        "round";
+    const eye2X =
+        head.x +
+        Math.cos(eyeAngle + 0.45) *
+        eyeDistance;
 
-    ctx.lineJoin =
-        "round";
+    const eye2Y =
+        head.y +
+        Math.sin(eyeAngle + 0.45) *
+        eyeDistance;
 
-    ctx.stroke();
-
-
-    /*
-        CABEÇA
-    */
-
-    const head =
-        player.body[0];
-
-
-    const sx =
-        head.x -
-        cameraX +
-        canvas.width / 2;
-
-
-    const sy =
-        head.y -
-        cameraY +
-        canvas.height / 2;
-
+    ctx.fillStyle = "#000";
 
     ctx.beginPath();
-
-
-    ctx.arc(
-        sx,
-        sy,
-        player.radius,
-        0,
-        Math.PI * 2
-    );
-
-
-    ctx.fillStyle =
-        "#00ff88";
-
+    ctx.arc(eye1X, eye1Y, 3, 0, Math.PI * 2);
     ctx.fill();
-
-
-    /*
-        OLHOS
-    */
-
-    ctx.fillStyle =
-        "black";
-
-
-    const eyeDistance = 5;
-
 
     ctx.beginPath();
-
-    ctx.arc(
-        sx +
-        Math.cos(
-            player.angle - 0.5
-        ) *
-        eyeDistance,
-
-        sy +
-        Math.sin(
-            player.angle - 0.5
-        ) *
-        eyeDistance,
-
-        2,
-
-        0,
-
-        Math.PI * 2
-    );
-
+    ctx.arc(eye2X, eye2Y, 3, 0, Math.PI * 2);
     ctx.fill();
-
-
-    ctx.beginPath();
-
-    ctx.arc(
-        sx +
-        Math.cos(
-            player.angle + 0.5
-        ) *
-        eyeDistance,
-
-        sy +
-        Math.sin(
-            player.angle + 0.5
-        ) *
-        eyeDistance,
-
-        2,
-
-        0,
-
-        Math.PI * 2
-    );
-
-    ctx.fill();
-
 }
 
-
 /* =========================
-        RANKING
+   LOOP
 ========================= */
 
-function updateRanking() {
+let lastTime = performance.now();
 
-    const scores = [
+function gameLoop(currentTime) {
 
-        {
-            name: "Você",
-
-            score:
-                player.length
-        }
-
-    ];
-
-
-    bots.forEach(
-        (bot, index) => {
-
-            if (!bot.alive) {
-                return;
-            }
-
-
-            scores.push({
-
-                name:
-                    "Bot " +
-                    (index + 1),
-
-                score:
-                    bot.length
-
-            });
-
-        }
-    );
-
-
-    scores.sort(
-        (a, b) =>
-            b.score -
-            a.score
-    );
-
-
-    rankingElement.innerHTML =
-        "";
-
-
-    scores
-        .slice(0, 8)
-        .forEach(
-            (item, index) => {
-
-                rankingElement.innerHTML +=
-                    `${index + 1}. ${item.name} — ${item.score}<br>`;
-
-            }
+    const delta =
+        Math.min(
+            (currentTime - lastTime) / 1000,
+            0.05
         );
 
-}
+    lastTime = currentTime;
 
+    if (player.alive) {
 
-/* =========================
-        GAME OVER
-========================= */
+        updatePlayer(delta);
 
-function endGame() {
+        for (const bot of bots) {
+            updateBot(bot, delta);
+        }
 
-    gameRunning = false;
+        checkCollisions();
 
-    finalScoreElement.textContent =
-        player.length;
+        collectOrbs();
 
-    gameOverScreen.style.display =
-        "flex";
+        scoreText.textContent =
+            Math.floor(player.targetLength);
 
-}
-
-
-/* =========================
-        RESTART
-========================= */
-
-function restartGame() {
-
-    location.reload();
-
-}
-
-
-/* =========================
-        GAME LOOP
-========================= */
-
-function gameLoop() {
-
-    if (!gameRunning) {
-        return;
+        updateLeaderboard();
     }
 
+    drawWorld();
 
-    updatePlayer();
-
-
-    bots.forEach(
-        bot =>
-            bot.update()
-    );
-
-
-    checkBotCollisions();
-
-
-    const cameraX =
-        player.x;
-
-    const cameraY =
-        player.y;
-
-
-    drawBackground(
-        cameraX,
-        cameraY
-    );
-
-
-    drawFood(
-        cameraX,
-        cameraY
-    );
-
-
-    bots.forEach(
-        bot => {
-
-            bot.draw(
-                cameraX,
-                cameraY
-            );
-
-        }
-    );
-
-
-    drawPlayer(
-        cameraX,
-        cameraY
-    );
-
-
-    scoreElement.textContent =
-        player.length;
-
-
-    speedElement.textContent =
-        boosting &&
-        player.length >
-        MIN_LENGTH
-            ? "BOOST ⚡"
-            : "Normal";
-
-
-    updateRanking();
-
-
-    requestAnimationFrame(
-        gameLoop
-    );
-
+    requestAnimationFrame(gameLoop);
 }
 
+/* =========================
+   RESTART
+========================= */
 
-gameLoop();
+restartButton.addEventListener("click", () => {
+
+    /*
+       Limpa orbs
+    */
+
+    orbs.length = 0;
+
+    /*
+       Limpa bots
+    */
+
+    bots.length = 0;
+
+    /*
+       Cria tudo novamente
+    */
+
+    createInitialOrbs();
+
+    createBots();
+
+    player = createPlayer();
+
+    gameOverScreen.style.display = "none";
+
+    scoreText.textContent =
+        player.targetLength;
+});
+
+/* =========================
+   INICIAR
+========================= */
+
+createInitialOrbs();
+
+createBots();
+
+player = createPlayer();
+
+updateLeaderboard();
+
+requestAnimationFrame(gameLoop);
 
 </script>
 
